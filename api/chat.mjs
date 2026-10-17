@@ -137,7 +137,9 @@ export async function processChat(payload, { env = process.env, fetchImpl = glob
       const data = await readProviderJson(response);
       const answer = safeAnswer(data?.choices?.[0]?.message?.content);
       if (!answer || answer.includes(key)) {
-        console.warn('Chat reply unavailable', data?.choices?.[0]?.finish_reason ?? 'invalid', Number(data?.usage?.completion_tokens) || 0);
+        const raw = data?.choices?.[0]?.message?.content;
+        const cleaned = typeof raw === 'string' ? raw.replace(/<think>[\s\S]*?<\/think>/gi, '').trim() : '';
+        console.warn('Chat reply unavailable', JSON.stringify({ finish: data?.choices?.[0]?.finish_reason, tokens: Number(data?.usage?.completion_tokens) || 0, kind: typeof raw, length: cleaned.length, html: /<[^>]*>/.test(cleaned), links: /https?:\/\//i.test(cleaned), override: OVERRIDE.test(cleaned), offTopic: OFF_TOPIC.test(cleaned), topical: TOPICS.test(cleaned) }));
         return fallback;
       }
       return { answer, mode: 'live', source: 'AI answer using project notes' };
