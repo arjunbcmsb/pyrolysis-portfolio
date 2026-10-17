@@ -1,8 +1,8 @@
 import { randomUUID } from 'node:crypto';
 
-// Units conservatively reserve full UTF-8 request bytes plus capped output.
+// Reserve conservatively, then settle to provider-reported total token usage.
 // One shared rolling ledger covers all IPs, instances and deployment URLs.
-export const DAILY_BUDGET_UNITS = 50_000;
+export const DAILY_BUDGET_UNITS = 75_000;
 export const WINDOW_MS = 86_400_000;
 export const BUDGET_SCRIPT = `
 local clock = redis.call('TIME')
@@ -22,8 +22,18 @@ redis.call('PEXPIRE', KEYS[1], window)
 return 1
 `;
 
-export async function reserveChatBudget(units, { env = process.env, fetchImpl = globalThis.fetch } = {}) {
-  if (!Number.isSafeInteger(units) || units < 1 || units > DAILY_BUDGET_UNITS) return false;
+export const SETTLE_SCRIPT = `
+local previous = ARGV[1] .. ':' .. ARGV[3]
+local score = redis.call('ZSCORE', KEYS[1], previous)
+if not score then return 0 end
+if tonumber(ARGV[2]) > tonumber(ARGV[1]) then return 0 end
+redis.call('ZREM', KEYS[1], previous)
+redis.call('ZADD', KEYS[1], score, ARGV[2] .. ':' .. ARGV[3])
+redis.call('PEXPIRE', KEYS[1], ARGV[4])
+return 1
+`;
+
+async function runBudgetCommand(command, { env, fetchImpl }) {
   const endpoint = env.UPSTASH_REDIS_REST_URL || env.KV_REST_API_URL;
   const token = env.UPSTASH_REDIS_REST_TOKEN || env.KV_REST_API_TOKEN;
   if (!endpoint || !token) return false;
@@ -33,15 +43,26 @@ export async function reserveChatBudget(units, { env = process.env, fetchImpl = 
     const response = await fetchImpl(url.origin, {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify(['EVAL', BUDGET_SCRIPT, '1', 'pyrolysis:chat:budget:v1', String(WINDOW_MS), String(DAILY_BUDGET_UNITS), String(units), randomUUID()]),
+      body: JSON.stringify(command),
       signal: AbortSignal.timeout(3000),
     });
     if (!response.ok) return false;
     const text = await response.text();
     if (text.length > 4096) return false;
     const data = JSON.parse(text);
-    if (data.result === 0) console.warn('Chat shared daily budget exhausted');
-    else if (data.error || data.result !== 1) console.warn('Chat budget store reply unavailable');
+    if (data.error || ![0, 1].includes(data.result)) console.warn('Chat budget store reply unavailable');
     return !data.error && data.result === 1;
   } catch { console.warn('Chat budget store unavailable'); return false; }
+}
+
+export async function reserveChatBudget(units, { env = process.env, fetchImpl = globalThis.fetch, reservationId = randomUUID() } = {}) {
+  if (!Number.isSafeInteger(units) || units < 1 || units > DAILY_BUDGET_UNITS || !/^[a-f0-9-]{36}$/.test(reservationId)) return false;
+  const allowed = await runBudgetCommand(['EVAL', BUDGET_SCRIPT, '1', 'pyrolysis:chat:budget:v1', String(WINDOW_MS), String(DAILY_BUDGET_UNITS), String(units), reservationId], { env, fetchImpl });
+  if (!allowed) console.warn('Chat shared budget reservation unavailable');
+  return allowed;
+}
+
+export async function settleChatBudget(reserved, actual, reservationId, { env = process.env, fetchImpl = globalThis.fetch } = {}) {
+  if (!Number.isSafeInteger(reserved) || reserved < 1 || reserved > DAILY_BUDGET_UNITS || !Number.isSafeInteger(actual) || actual < 1 || actual > reserved || !/^[a-f0-9-]{36}$/.test(reservationId)) return false;
+  return runBudgetCommand(['EVAL', SETTLE_SCRIPT, '1', 'pyrolysis:chat:budget:v1', String(reserved), String(actual), reservationId, String(WINDOW_MS)], { env, fetchImpl });
 }

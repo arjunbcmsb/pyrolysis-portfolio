@@ -30,7 +30,7 @@ See `.env.example` for configuration names. Live mode is deliberately disabled u
 
 Original Unity source files and the project report are excluded from this repository.
 
-Chat uses a five-per-minute per-IP firewall rule plus a shared rolling 24-hour budget in free Upstash Redis. Common suggested questions use approved answers without an AI request. Store failures and exhausted budgets use FAQs. Paid auto-upgrades are disabled.
+Chat uses a five-per-minute per-IP firewall rule plus a shared rolling 24-hour budget in free Upstash Redis. Suggested questions use live AI when available. Only greetings use prepared answers immediately. A shared 75,000-unit rolling 24-hour cap reserves worst-case usage before each request, then settles successful calls to the provider-reported total token count. Missing usage retains the full reservation. Store failures and exhausted budgets use FAQs. Paid auto-upgrades are disabled.
 
 ## Visit statistics
 

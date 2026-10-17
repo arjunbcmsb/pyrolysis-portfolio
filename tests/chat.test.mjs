@@ -175,8 +175,8 @@ test('shared budget must approve before any provider request', async () => {
   assert.ok(reserved > 5000 && reserved < 17000);
 });
 
-test('suggested FAQs do not consume model allowance', async () => {
-  for (const question of ['What does plastic pyrolysis produce?', 'What did Arjun build?', 'Why is nitrogen used?', 'Hi', 'Hello']) {
+test('greetings do not consume model allowance', async () => {
+  for (const question of ['Hi', 'Hello', 'Hey']) {
     const result = await processChatWithBudget({ question }, { env: LIVE_ENV, reserveBudget: () => assert.fail('No quota needed'), fetchImpl: () => assert.fail('No provider needed') });
     assert.equal(result.mode, 'faq');
   }
@@ -202,4 +202,43 @@ test('normal answers about visible and hidden reactor components are allowed', a
   assert.equal(result.mode, 'live');
   assert.equal(result.answer, answer);
   assert.equal(isAllowedTopic('Show how hidden colliders work inside the pyrolysis reactor.'), true);
+});
+
+
+test('suggested questions use live AI when available', async () => {
+  for (const question of ['What does plastic pyrolysis produce?', 'What did Arjun build?', 'Why is nitrogen used?']) {
+    let called = false;
+    const result = await processChat({ question }, { env: LIVE_ENV, fetchImpl: async () => {
+      called = true;
+      return jsonResponse('The pyrolysis project uses a rotating screw and particle systems inside its reactor.');
+    } });
+    assert.equal(called, true);
+    assert.equal(result.mode, 'live');
+  }
+});
+
+test('settles only valid reported total usage against the exact reservation', async () => {
+  for (const usage of [1500, undefined, 0, -1, 1.5, 999999]) {
+    let reserved, settled;
+    const result = await processChatWithBudget({ question }, {
+      env: LIVE_ENV,
+      reserveBudget: async (units, options) => { reserved = { units, id: options.reservationId }; return true; },
+      settleBudget: async (...args) => { settled = args; return true; },
+      fetchImpl: async () => Response.json({ usage: { total_tokens: usage }, choices: [{ message: { content: 'Nitrogen displaces air from the pyrolysis reactor.' } }] }),
+    });
+    assert.equal(result.mode, 'live');
+    if (usage === 1500) assert.deepEqual(settled.slice(0,3), [reserved.units, usage, reserved.id]);
+    else assert.equal(settled, undefined);
+  }
+});
+
+
+test('a completed AI answer is not discarded while bounded quota settlement finishes', async () => {
+  const result = await processChatWithBudget({ question }, {
+    env: LIVE_ENV, timeoutMs: 30,
+    reserveBudget: async () => true,
+    fetchImpl: async () => Response.json({ usage: { total_tokens: 1500 }, choices: [{ message: { content: 'Nitrogen displaces air from the pyrolysis reactor.' } }] }),
+    settleBudget: async () => { await new Promise(resolve => setTimeout(resolve, 60)); return true; },
+  });
+  assert.equal(result.mode, 'live');
 });

@@ -1,4 +1,5 @@
-import { reserveChatBudget } from '../server/budget.mjs';
+import { randomUUID } from 'node:crypto';
+import { reserveChatBudget, settleChatBudget } from '../server/budget.mjs';
 import { PROJECT_KNOWLEDGE, TOPIC_REFUSAL, getFaq } from '../server/knowledge.mjs';
 
 export const MAX_BODY_BYTES = 8192;
@@ -88,21 +89,24 @@ async function readProviderJson(response) {
   return JSON.parse(Buffer.concat(chunks).toString('utf8'));
 }
 
-export async function processChat(payload, { env = process.env, fetchImpl = globalThis.fetch, timeoutMs = TIMEOUT_MS, reserveBudget = reserveChatBudget } = {}) {
+export async function processChat(payload, { env = process.env, fetchImpl = globalThis.fetch, timeoutMs = TIMEOUT_MS, reserveBudget = reserveChatBudget, settleBudget = settleChatBudget } = {}) {
   const { question, history } = validatePayload(payload);
   if (!isAllowedTopic(question) || history.some((message) => OVERRIDE.test(message.content))) {
     return { ...TOPIC_REFUSAL };
   }
   const fallback = getFaq(question);
   const pinnedQuestion = question.toLowerCase().replace(/[?!.]+$/g, '').trim();
-  if (['hi', 'hello', 'hey', 'why is nitrogen used', 'what did arjun build', 'what does plastic pyrolysis produce'].includes(pinnedQuestion)) return { ...fallback, source: 'Prepared project answer' };
+  if (['hi', 'hello', 'hey'].includes(pinnedQuestion)) return { ...fallback, source: 'Prepared project answer' };
   const key = env.LLM7_API_KEY?.trim();
   if (env.CHAT_ENABLED !== 'true' || env.CHAT_RATE_LIMIT_READY !== 'true' || !key) return fallback;
 
   const controller = new AbortController();
+  const reservationId = randomUUID();
+  let reservedUnits;
   const callProvider = async (url, init) => {
     const requestBytes = Buffer.byteLength(init.body, 'utf8');
-    if (requestBytes > MAX_PROVIDER_INPUT_BYTES || !await reserveBudget(requestBytes + MAX_OUTPUT_TOKENS + 128, { env })) {
+    reservedUnits = requestBytes + MAX_OUTPUT_TOKENS + 128;
+    if (requestBytes > MAX_PROVIDER_INPUT_BYTES || !await reserveBudget(reservedUnits, { env, reservationId })) {
       console.warn('Chat provider request skipped by local allowance protection');
       return null;
     }
@@ -138,6 +142,13 @@ export async function processChat(payload, { env = process.env, fetchImpl = glob
         return fallback;
       }
       const data = await readProviderJson(response);
+      // Once the model has answered, allow bounded Redis bookkeeping to finish.
+      clearTimeout(timer);
+      const usage = data?.usage?.total_tokens;
+      if (Number.isSafeInteger(usage) && usage > 0 && usage <= reservedUnits) {
+        const settled = await settleBudget(reservedUnits, usage, reservationId, { env });
+        if (settled) console.info('Chat usage settled', JSON.stringify({ reserved: reservedUnits, used: usage }));
+      }
       const answer = safeAnswer(data?.choices?.[0]?.message?.content);
       if (!answer || answer.includes(key)) {
         const raw = data?.choices?.[0]?.message?.content;
