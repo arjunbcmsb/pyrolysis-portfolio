@@ -15,6 +15,7 @@ The website was developed by Arjun Chandra. It presents an overview, a project i
 `.trim();
 
 const FAQS = [
+  { id: 'greeting', pattern: /^(hi|hello|hey)[!.?]*$/i, answer: 'Hello. Ask me about plastic pyrolysis, the simulation or Arjun’s role in this project.' },
   {
     id: 'product-management',
     pattern: /\b(product management|product roadmap|product manager|roadmap|mvp|backlog|prioriti\w*|user stor\w*|acceptance criteria|milestone\w*|resource constraints|feedback|professor\w*|student\w*)\b/i,

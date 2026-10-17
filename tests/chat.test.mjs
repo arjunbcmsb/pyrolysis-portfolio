@@ -176,7 +176,7 @@ test('shared budget must approve before any provider request', async () => {
 });
 
 test('suggested FAQs do not consume model allowance', async () => {
-  for (const question of ['What does plastic pyrolysis produce?', 'What did Arjun build?', 'Why is nitrogen used?']) {
+  for (const question of ['What does plastic pyrolysis produce?', 'What did Arjun build?', 'Why is nitrogen used?', 'Hi', 'Hello']) {
     const result = await processChatWithBudget({ question }, { env: LIVE_ENV, reserveBudget: () => assert.fail('No quota needed'), fetchImpl: () => assert.fail('No provider needed') });
     assert.equal(result.mode, 'faq');
   }

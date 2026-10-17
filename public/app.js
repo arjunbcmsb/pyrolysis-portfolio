@@ -1,6 +1,53 @@
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
+  const consentKey = 'pyrolysis-analytics-v1';
+  const consentPanel = $('analytics-consent');
+  const privacyButton = $('open-privacy');
+  let analyticsAllowed = false;
+  let analyticsStarted = false;
+  let privacyOpened = false;
+  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+  window.va('beforeSend', (event) => {
+    if (!analyticsAllowed) return null;
+    const cleanUrl = new URL(event.url, location.origin);
+    cleanUrl.search = '';
+    cleanUrl.hash = '';
+    return { ...event, url: cleanUrl.href };
+  });
+  function startAnalytics() {
+    if (analyticsStarted) return;
+    analyticsStarted = true;
+    const script = document.createElement('script');
+    script.src = '/_vercel/insights/script.js';
+    script.defer = true;
+    document.head.append(script);
+  }
+  function chooseAnalytics(accepted) {
+    analyticsAllowed = accepted;
+    try { localStorage.setItem(consentKey, accepted ? 'accepted' : 'declined'); } catch { /* Choice still applies for this page. */ }
+    consentPanel.hidden = true;
+    if (accepted) startAnalytics();
+    if (privacyOpened) privacyButton.focus({ preventScroll: true });
+  }
+  let savedConsent;
+  try { savedConsent = localStorage.getItem(consentKey); } catch { /* Ask again when storage is unavailable. */ }
+  analyticsAllowed = savedConsent === 'accepted';
+  if (analyticsAllowed) startAnalytics();
+  consentPanel.hidden = savedConsent === 'accepted' || savedConsent === 'declined';
+  window.addEventListener('storage', (event) => {
+    if (event.key !== consentKey && event.key !== null) return;
+    analyticsAllowed = event.newValue === 'accepted';
+    if (analyticsAllowed) startAnalytics();
+    consentPanel.hidden = event.newValue === 'accepted' || event.newValue === 'declined';
+  });
+  $('analytics-accept').addEventListener('click', () => chooseAnalytics(true));
+  $('analytics-decline').addEventListener('click', () => chooseAnalytics(false));
+  privacyButton.addEventListener('click', () => {
+    privacyOpened = true;
+    consentPanel.hidden = false;
+    $('analytics-accept').focus({ preventScroll: true });
+  });
   const stage = $('player-stage');
   const cover = $('player-cover');
   const launch = $('launch-button');
