@@ -138,7 +138,11 @@ export async function processChat(payload, { env = process.env, fetchImpl = glob
       });
       if (!response) return fallback;
       if (!response.ok) {
-        console.warn('Chat provider unavailable', response.status);
+        let errorData;
+        try { errorData = await readProviderJson(response); } catch { /* Never log a raw upstream error. */ }
+        const description = JSON.stringify(errorData ?? {}).toLowerCase();
+        const categories = ['quota', 'daily', 'token', 'credit', 'balance', 'rate', 'request', 'capacity', 'model', 'plan', 'limit', 'exceeded', 'wait', 'retry', 'seconds', 'hour', 'minute'];
+        console.warn('Chat provider unavailable', JSON.stringify({ status: response.status, hints: categories.filter(word => description.includes(word)), retryAfter: /^\d{1,6}$/.test(response.headers.get('retry-after') ?? '') ? Number(response.headers.get('retry-after')) : null }));
         return fallback;
       }
       const data = await readProviderJson(response);
