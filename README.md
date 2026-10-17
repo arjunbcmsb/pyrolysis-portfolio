@@ -2,7 +2,7 @@
 
 A portfolio website with an interactive Unity Web export and a project assistant.
 
-Live website: https://pyrolysis-by-arjun.vercel.app
+Live website: https://pyrolysis3d.vercel.app
 
 ## Local preview
 
@@ -29,3 +29,5 @@ See `.env.example` for configuration names. Live mode is deliberately disabled u
 `node scripts/check.mjs`
 
 Original Unity source files and the project report are excluded from this repository.
+
+Chat uses a five-per-minute per-IP firewall rule plus a shared rolling 24-hour budget in free Upstash Redis. Common suggested questions use approved answers without an AI request. Store failures and exhausted budgets use FAQs. Paid auto-upgrades are disabled.

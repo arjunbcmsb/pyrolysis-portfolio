@@ -1,7 +1,10 @@
+import { reserveChatBudget } from '../server/budget.mjs';
 import { PROJECT_KNOWLEDGE, TOPIC_REFUSAL, getFaq } from '../server/knowledge.mjs';
 
 export const MAX_BODY_BYTES = 8192;
 export const MAX_ANSWER_CHARS = 1100;
+export const MAX_OUTPUT_TOKENS = 512;
+export const MAX_PROVIDER_INPUT_BYTES = 16_000;
 export const MODEL = 'GLM-5.3-Flash';
 const API_URL = 'https://api.llm7.io/v1/chat/completions';
 const TIMEOUT_MS = 15_000;
@@ -84,27 +87,36 @@ async function readProviderJson(response) {
   return JSON.parse(Buffer.concat(chunks).toString('utf8'));
 }
 
-export async function processChat(payload, { env = process.env, fetchImpl = globalThis.fetch, timeoutMs = TIMEOUT_MS } = {}) {
+export async function processChat(payload, { env = process.env, fetchImpl = globalThis.fetch, timeoutMs = TIMEOUT_MS, reserveBudget = reserveChatBudget } = {}) {
   const { question, history } = validatePayload(payload);
   if (!isAllowedTopic(question) || history.some((message) => OVERRIDE.test(message.content))) {
     return { ...TOPIC_REFUSAL };
   }
   const fallback = getFaq(question);
+  const pinnedQuestion = question.toLowerCase().replace(/[?!.]+$/g, '').trim();
+  if (['why is nitrogen used', 'what did arjun build', 'what does plastic pyrolysis produce'].includes(pinnedQuestion)) return { ...fallback, source: 'Prepared project answer' };
   const key = env.LLM7_API_KEY?.trim();
   if (env.CHAT_ENABLED !== 'true' || env.CHAT_RATE_LIMIT_READY !== 'true' || !key) return fallback;
 
   const controller = new AbortController();
+  const callProvider = async (url, init) => {
+    const requestBytes = Buffer.byteLength(init.body, 'utf8');
+    if (requestBytes > MAX_PROVIDER_INPUT_BYTES || !await reserveBudget(requestBytes + MAX_OUTPUT_TOKENS + 128, { env })) {
+      return new Response('', { status: 429 });
+    }
+    return fetchImpl(url, init);
+  };
   let timer;
   try {
     const request = (async () => {
-      const response = await fetchImpl(API_URL, {
+      const response = await callProvider(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
         signal: controller.signal,
         body: JSON.stringify({
           model: MODEL,
           stream: false,
-          max_tokens: 240,
+          max_tokens: MAX_OUTPUT_TOKENS,
           temperature: 0.2,
           messages: [
             {
@@ -118,10 +130,16 @@ export async function processChat(payload, { env = process.env, fetchImpl = glob
           ],
         }),
       });
-      if (!response.ok) return fallback;
+      if (!response.ok) {
+        console.warn('Chat provider unavailable', response.status);
+        return fallback;
+      }
       const data = await readProviderJson(response);
       const answer = safeAnswer(data?.choices?.[0]?.message?.content);
-      if (!answer || answer.includes(key)) return fallback;
+      if (!answer || answer.includes(key)) {
+        console.warn('Chat reply unavailable', data?.choices?.[0]?.finish_reason ?? 'invalid', Number(data?.usage?.completion_tokens) || 0);
+        return fallback;
+      }
       return { answer, mode: 'live', source: 'AI answer using project notes' };
     })();
     const deadline = new Promise((resolve) => {

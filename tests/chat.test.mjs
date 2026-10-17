@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createChatHandler, processChat, isAllowedTopic, validatePayload, validOrigin, MODEL, MAX_ANSWER_CHARS } from '../api/chat.mjs';
+import { createChatHandler, processChat as processChatWithBudget, isAllowedTopic, validatePayload, validOrigin, MODEL, MAX_ANSWER_CHARS } from '../api/chat.mjs';
+
+const processChat = (payload, options = {}) => processChatWithBudget(payload, { reserveBudget: async () => true, ...options });
 
 const LIVE_ENV = { CHAT_ENABLED: 'true', CHAT_RATE_LIMIT_READY: 'true', LLM7_API_KEY: 'test-not-a-real-key' };
 const question = 'Why is nitrogen used in this pyrolysis project?';
@@ -63,7 +65,7 @@ test('PM questions use confirmed contribution without invented evidence or other
     assert.doesNotMatch(result.answer, /teammate|other team|\d+%/);
   }
   const contribution = await processChat({ question: 'What did Arjun develop?' }, { env: {} });
-  assert.match(contribution.answer, /website and web delivery/);
+  assert.match(contribution.answer, /website and its AI-powered chat assistant/);
   assert.doesNotMatch(contribution.answer, /teammate|other team/);
 });
 
@@ -79,7 +81,7 @@ test('pins the model and sends bounded chat only to the approved endpoint', asyn
   assert.equal(result.mode, 'live');
   assert.equal(request.url, 'https://api.llm7.io/v1/chat/completions');
   assert.equal(request.body.model, MODEL);
-  assert.equal(request.body.max_tokens, 240);
+  assert.equal(request.body.max_tokens, 512);
   assert.equal(request.body.stream, false);
   assert.equal(request.body.tools, undefined);
   assert.equal(request.body.response_format, undefined);
@@ -157,4 +159,30 @@ test('resource recovery does not select the product management FAQ', async () =>
   const { getFaq } = await import('../server/knowledge.mjs');
   assert.match(getFaq('How does plastic pyrolysis recover resources?').answer, /recover useful materials/);
   assert.match(getFaq('How did Arjun manage resource constraints?').answer, /roadmap/);
+});
+
+
+test('shared budget must approve before any provider request', async () => {
+  let calls = 0;
+  let reserved;
+  const result = await processChatWithBudget({ question }, {
+    env: LIVE_ENV,
+    reserveBudget: async (units) => { reserved = units; return false; },
+    fetchImpl: () => { calls++; assert.fail('Quota denial must stop the provider'); },
+  });
+  assert.equal(result.mode, 'faq');
+  assert.equal(calls, 0);
+  assert.ok(reserved > 5000 && reserved < 17000);
+});
+
+test('suggested FAQs do not consume model allowance', async () => {
+  for (const question of ['What does plastic pyrolysis produce?', 'What did Arjun build?', 'Why is nitrogen used?']) {
+    const result = await processChatWithBudget({ question }, { env: LIVE_ENV, reserveBudget: () => assert.fail('No quota needed'), fetchImpl: () => assert.fail('No provider needed') });
+    assert.equal(result.mode, 'faq');
+  }
+});
+
+test('missing shared-budget credentials fail closed', async () => {
+  const result = await processChatWithBudget({ question }, { env: LIVE_ENV, fetchImpl: () => assert.fail('Unprotected live calls are blocked') });
+  assert.equal(result.mode, 'faq');
 });

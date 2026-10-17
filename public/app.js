@@ -206,7 +206,7 @@
       const data = await response.json();
       if (typeof data.answer !== 'string' || data.answer.length > 1500 || !['live', 'faq', 'refused'].includes(data.mode)) throw new Error('Invalid answer');
       answer = data.answer; mode = data.mode;
-      source = mode === 'live' ? 'AI answer · Project notes' : mode === 'faq' ? 'Prepared FAQ · Live AI unavailable' : 'Project topic guide';
+      source = mode === 'live' ? 'AI answer · Project notes' : mode === 'faq' ? (data.source === 'Prepared project answer' ? 'Prepared project answer' : 'Prepared FAQ · Live AI unavailable') : 'Project topic guide';
     } catch {
       answer = offlineAnswer(question); source = 'Prepared FAQ · Live AI unavailable'; mode = 'faq';
     } finally { clearTimeout(timeout); }
