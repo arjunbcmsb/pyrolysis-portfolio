@@ -206,7 +206,7 @@
     $('question-count').textContent = '0 / 600';
     chatStatus.textContent = 'Finding a short answer...';
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 20_000);
+    const timeout = setTimeout(() => controller.abort(), 40_000);
     let answer, source, mode;
     try {
       const response = await fetch('/api/chat', {

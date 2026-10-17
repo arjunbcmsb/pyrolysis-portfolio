@@ -11,6 +11,20 @@ local window = tonumber(ARGV[1])
 local ceiling = tonumber(ARGV[2])
 local cost = tonumber(ARGV[3])
 redis.call('ZREMRANGEBYSCORE', KEYS[1], '-inf', now - window)
+-- One-time correction of pre-settlement test reservations. The account owner
+-- confirmed 8,930 total input/output tokens after this cutoff. Keep that full
+-- amount until cutoff + 24h, and retain every later reservation unchanged.
+local legacyCutoff = 1792236130000
+local legacyBaseline = 8930
+local legacy = redis.call('ZRANGEBYSCORE', KEYS[1], '-inf', legacyCutoff)
+local legacyUsed = 0
+for _, entry in ipairs(legacy) do
+  legacyUsed = legacyUsed + tonumber(string.match(entry, '^(%d+):'))
+end
+if legacyUsed > legacyBaseline then
+  for _, entry in ipairs(legacy) do redis.call('ZREM', KEYS[1], entry) end
+  redis.call('ZADD', KEYS[1], legacyCutoff, tostring(legacyBaseline) .. ':reconciled-2026-10-17')
+end
 local entries = redis.call('ZRANGE', KEYS[1], 0, -1)
 local used = 0
 for _, entry in ipairs(entries) do

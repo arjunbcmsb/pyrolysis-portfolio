@@ -8,7 +8,7 @@ export const MAX_OUTPUT_TOKENS = 512;
 export const MAX_PROVIDER_INPUT_BYTES = 16_000;
 export const MODEL = 'GLM-5.3-Flash';
 const API_URL = 'https://api.llm7.io/v1/chat/completions';
-const TIMEOUT_MS = 15_000;
+const TIMEOUT_MS = 30_000;
 
 class InputError extends Error {
   constructor(message, status = 400) {
@@ -165,6 +165,7 @@ export async function processChat(payload, { env = process.env, fetchImpl = glob
     const deadline = new Promise((resolve) => {
       timer = setTimeout(() => {
         controller.abort();
+        console.warn('Chat provider deadline exceeded');
         resolve(fallback);
       }, timeoutMs);
     });
