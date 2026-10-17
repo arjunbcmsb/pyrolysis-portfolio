@@ -1,39 +1,94 @@
 # Pyrolysis of Plastics
 
-A portfolio website with an interactive Unity Web export and a project assistant.
+An interactive 3D learning experience that makes a complex chemical engineering process visible.
 
-Live website: https://pyrolysis3d.vercel.app
+**A product case study by Arjun Chandra: product strategy, MVP delivery and hands-on development.**
 
-## Local preview
+[Try the live product](https://pyrolysis3d.vercel.app/) · [Explore the simulation](https://pyrolysis3d.vercel.app/#simulation) · [Connect on LinkedIn](https://www.linkedin.com/in/arjunbcmsb/)
 
-Requires Node.js 22 or newer. No frontend dependency installation is needed.
+![The portfolio website with an illustrated reactor and navigation to the introduction, design, simulation and product role.](docs/images/portfolio.png)
 
-Run `node scripts/preview.mjs`, then visit http://localhost:4173/.
+## The problem
 
-## Hosting
+Textbooks explain the chemistry of plastic pyrolysis, but students cannot easily see what happens inside the reactor. The challenge was to turn that hidden sequence into an experience they could follow, replay and discuss.
 
-Vercel serves `public/` and the Node function at `/api/chat` using `vercel.json`.
-Connect this repository to the existing `pyrolysis-by-arjun` project. Pushes to the production branch can deploy automatically.
+**Primary users:** chemical engineering students. **Product goal:** help them visualise the process through an interactive 3D application.
 
-The Unity export uses `.unityweb` decompression fallback. Preserve these files and do not add Content-Encoding headers to them.
+## My role
 
-## Assistant
+I led a three-student team across chemical engineering and computer science. I owned the product vision, MVP backlog, roadmap and delivery, alongside the Unity application and its software development. The chemical engineering work and calculations were handled by my teammates.
 
-Prepared FAQs work without credentials. Provider credentials belong in private Vercel environment variables, never browser code or Git.
-See `.env.example` for configuration names. Live mode is deliberately disabled until its activation requirements are configured.
+| Responsibility | Contribution |
+| --- | --- |
+| Vision and scope | Defined the educational goal, wrote user stories and acceptance criteria, and shaped the MVP backlog. |
+| Prioritisation and delivery | Prioritised the core learning sequence, managed milestones and delivered the application despite resource constraints. |
+| Experience and implementation | Translated the process into 3D models, animation, C# interactions and explanations synchronised with the simulation. |
+| Feedback and communication | Gathered qualitative feedback from professors and students, and presented the project to academic stakeholders. |
+| Web delivery | Extended the Windows application into a browser experience with a public demo, project context and an AI-powered assistant. |
 
-## Checks
+## Product decisions
 
-`node --test tests/*.test.mjs`
+| Need or constraint | Decision | Trade-off |
+| --- | --- | --- |
+| Students need to understand a process they cannot see. | Use a semi-transparent reactor, moving particles and a rotating screw. | Prioritise visibility of the sequence over a fully opaque industrial appearance. |
+| Animation alone does not explain the chemistry. | Synchronise short explanations with each stage. | Keep detail brief enough to follow while watching. |
+| Students need to revisit the sequence. | Include Start, Restart and Back controls. | Focus interaction on learning and replay rather than adding a complex control panel. |
+| A hiring manager should be able to try the work without installing an app. | Publish the Unity Web build inside a lightweight portfolio. | The first visit still requires downloading the Unity build. |
+| The web player takes time to initialise. | Show the introduction immediately, preload Unity and enable Launch only when it is ready. | Background loading improves the wait but cannot guarantee an instant launch. |
+| An open AI endpoint has a limited allowance. | Keep credentials on the server, cap usage and provide prepared answers when live AI is unavailable. | Availability takes priority over unlimited chat. |
 
-`node scripts/check.mjs`
+## What shipped
 
-Original Unity source files and the project report are excluded from this repository.
+- **A complete learning sequence:** plastic feed, nitrogen purge, heating, polymer breakdown and product release.
+- **A 3D reactor experience:** Blender models, a semi-transparent chamber, automatic screw rotation, particles and timed explanations in Unity.
+- **A browser-accessible demo:** real loading progress, readiness-based launch, fullscreen, retry and image fallbacks.
+- **A project assistant:** short answers about the project and pyrolysis, with topic boundaries and shared usage controls.
 
-Chat uses a five-per-minute per-IP firewall rule plus a shared rolling 24-hour budget in free Upstash Redis. Suggested questions use live AI when available. Only greetings use prepared answers immediately. A shared 75,000-unit rolling 24-hour cap reserves worst-case usage before each request, then settles successful calls to the provider-reported total token count. Missing usage retains the full reservation. Store failures and exhausted budgets use FAQs. Paid auto-upgrades are disabled.
+![The Unity teaching experience showing the reactor interior, rotating screw, particles and stage explanations.](docs/images/simulation.png)
 
-## Visit statistics
+To try it, open the [simulation](https://pyrolysis3d.vercel.app/#simulation), wait for **Launch simulation**, then select **Start** in the Unity Home scene.
 
-Vercel Web Analytics stays off until an explicit Allow visit statistics choice. A separate non-modal popup uses the site palette and typography, with No thanks equally available. It sits outside the page layout and leaves chat and Unity available. Permission lasts up to 180 days; legacy automatic-on settings never count as consent. Privacy and Contact provide withdrawal. The SDK has automatic tracking disabled, and only a consent-checked manual page view is sent, so withdrawal does not reload Unity or chat. URL query strings/fragments are removed. Contact and chat link to the site privacy notice and provider policies. Content blockers can prevent collection.
+## Outcome and evidence
 
-The per-visitor AI cap is 20,000 tokens per rolling 24 hours, identified by a keyed hash of Vercel's trusted client IP. Raw IPs and questions are not stored in the budget ledger. The shared 75,000-unit cap also applies. Both limits are reserved atomically and settled to reported total input/output tokens. People sharing an IP share the visitor limit. Missing identity or storage failure prevents a live call. Old unassigned ledger entries still count towards the shared cap.
+The application was delivered and later made available through a public browser demo. Qualitative feedback from university professors and students supported its usefulness as an educational visualisation.
+
+Validation so far is qualitative; no learning-gain or adoption metrics were collected. The working demo and source code provide direct evidence of what was delivered.
+
+The next useful product evaluation would measure whether students can explain the process more accurately after using the application, and where they need additional guidance. This is a proposed next step, not a completed study.
+
+## Explore the implementation
+
+| Area | Source |
+| --- | --- |
+| Website and navigation | [Page](public/index.html), [styles](public/styles.css), [interactions](public/app.js) |
+| Unity browser integration | [Player bridge](public/demo/player.js), [integration checks](tests/unity.test.mjs) |
+| AI assistant | [API endpoint](api/chat.mjs), [curated knowledge](server/knowledge.mjs), [answer checks](tests/chat.test.mjs) |
+| Usage protection | [Shared budget](server/budget.mjs), [budget checks](tests/budget.test.mjs) |
+| Optional statistics | [Consent controls](public/analytics.js), [consent checks](tests/analytics.test.mjs) |
+
+**Stack:** Unity, C#, Blender, HTML, CSS, JavaScript, Node.js, Vercel, LLM7 and Upstash Redis. The website has no npm runtime dependencies.
+
+This repository contains the website source, server-side assistant, automated tests and compiled Unity Web export. Original Unity C# scripts, Blender source files and the private project report are not included.
+
+## Run locally
+
+Requires Node.js 22. No dependency installation is needed.
+
+```sh
+npm run dev
+```
+
+Open [localhost:4173](http://localhost:4173/). Without private provider configuration, the assistant uses prepared project answers. Credentials are never required to explore the website and Unity demo locally.
+
+```sh
+npm test
+npm run check
+```
+
+The suite covers chat input and answer boundaries, budget reservations, analytics consent and Unity integration. [Technical setup and limitations](docs/TECHNICAL.md) describe deployment, configuration and verification scope.
+
+## Contact
+
+**Arjun Chandra**
+
+[LinkedIn](https://www.linkedin.com/in/arjunbcmsb/) · [Email](mailto:arjun1300@gmail.com) · [Portfolio](https://pyrolysis3d.vercel.app/)
