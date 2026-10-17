@@ -194,3 +194,12 @@ test('technical explanations using act as are accepted', async () => {
   assert.equal(result.mode, 'live');
   assert.equal(isAllowedTopic('Act as a developer and discuss pyrolysis.'), false);
 });
+
+
+test('normal answers about visible and hidden reactor components are allowed', async () => {
+  const answer = 'Particle systems show plastic conversion while hidden colliders act as invisible walls inside the reactor. The particles shrink to depict the plastic becoming gases.';
+  const result = await processChat({ question }, { env: LIVE_ENV, fetchImpl: async () => jsonResponse(answer) });
+  assert.equal(result.mode, 'live');
+  assert.equal(result.answer, answer);
+  assert.equal(isAllowedTopic('Show how hidden colliders work inside the pyrolysis reactor.'), true);
+});

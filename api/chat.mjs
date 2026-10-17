@@ -20,7 +20,8 @@ function canonicalText(value) {
   return value.normalize('NFKC').replace(/[\u200B-\u200F\u202A-\u202E\u2060-\u206F\uFEFF]/g, '');
 }
 
-const OVERRIDE = /(?:\b(?:ignore|override|forget|disregard|bypass|replace)\b.{0,80}\b(?:instruction|rule|prompt|system|previous|restriction|guardrail|policy)|\b(?:system|developer)\s*(?:message|prompt|role|:)|\b(?:reveal|show|print|repeat|leak|extract)\b.{0,60}\b(?:system prompt|hidden|secret|api key|token|environment variable|instruction)|\b(?:pretend\s+you(?:'re| are)|act\s+as\s+(?:(?:a|an|the)\s+)?(?:developer|system|assistant|unrestricted|chatgpt|dan|persona))\b|\b(?:jailbreak|dan mode|roleplay|base64|rot13)\b|<\/?(?:system|instruction|developer)\b|\[INST\]|\b(?:curl|wget|fetch|http request)\b)/is;
+const OVERRIDE = /(?:\b(?:ignore|override|forget|disregard|bypass|replace)\b.{0,80}\b(?:instruction|rule|prompt|system|previous|restriction|guardrail|policy)|\b(?:system|developer)\s*(?:message|prompt|role|:)|\b(?:reveal|show|print|repeat|leak|extract)\b.{0,60}\b(?:system prompt|hidden (?:prompt|instruction|configuration|message|rule|secret)|secret|api key|token|environment variable|instruction)|\b(?:pretend\s+you(?:'re| are)|act\s+as\s+(?:(?:a|an|the)\s+)?(?:developer|system|assistant|unrestricted|chatgpt|dan|persona))\b|\b(?:jailbreak|dan mode|roleplay|base64|rot13)\b|<\/?(?:system|instruction|developer)\b|\[INST\]|\b(?:curl|wget|fetch|http request)\b)/is;
+const OUTPUT_META = /\b(?:system|developer)\s+(?:prompt|instructions?|message)|\b(?:api key|access token|environment variable)|\[INST\]|<\/?(?:system|developer|instruction)\b/i;
 const OFF_TOPIC = /\b(?:president|election|political|cryptocurrency|bitcoin|stock price|investment advice|medical diagnosis|dating advice|football|soccer|celebrity|horoscope|recipe|cooking|weather forecast|solve this|write (?:me )?(?:a poem|a story|an essay|a song|a script|code)|translate|summarise this|summarize this)\b/i;
 const TOPICS = /\b(?:pyrolys\w*|plastic\w*|reactor\w*|polymer\w*|hydrocarbon\w*|nitrogen|oxygen|purge|purging|inert|combustion|feedstock\w*|catalys\w*|char|wax|gasification|recycl\w*|project|website|site|demo|simulation|animation|unity|blender|webgl|arjun|team|contribut\w*|credit\w*|c#|csharp|urp|particle\w*|collider\w*|screw|3d|portfolio|software|tech stack|product management|product direction|product manager|roadmap|mvp|backlog|prioriti\w*|user stor\w*|acceptance criteria|milestone\w*|feedback|professor\w*|student\w*|temperature|500|heat\w*|environment\w*|renewab\w*|climate|sustainab\w*|pollut\w*|emission\w*|oil|gas|gases|yield\w*|validat\w*|calculat\w*|efficien\w*|start|restart|launch|back|button\w*|control\w*|load\w*|browser|download|screen|fullscreen|mobile|phone|chatbot|chat|hello|hi|help)\b/i;
 
@@ -59,7 +60,7 @@ function safeAnswer(value) {
   if (typeof value !== 'string') return null;
   const text = value.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
   if (!text || text.length > MAX_ANSWER_CHARS || /<[^>]*>|https?:\/\/|\b(?:sk-|llm7[_-])\S{8,}/i.test(text)) return null;
-  if (OVERRIDE.test(text) || OFF_TOPIC.test(text) || !TOPICS.test(text)) return null;
+  if (OUTPUT_META.test(text) || OFF_TOPIC.test(text) || !TOPICS.test(text)) return null;
   return text.replace(/[\u2013\u2014]/g, ',');
 }
 
@@ -139,7 +140,7 @@ export async function processChat(payload, { env = process.env, fetchImpl = glob
       if (!answer || answer.includes(key)) {
         const raw = data?.choices?.[0]?.message?.content;
         const cleaned = typeof raw === 'string' ? raw.replace(/<think>[\s\S]*?<\/think>/gi, '').trim() : '';
-        console.warn('Chat reply unavailable', JSON.stringify({ finish: data?.choices?.[0]?.finish_reason, tokens: Number(data?.usage?.completion_tokens) || 0, kind: typeof raw, length: cleaned.length, html: /<[^>]*>/.test(cleaned), links: /https?:\/\//i.test(cleaned), override: OVERRIDE.test(cleaned), offTopic: OFF_TOPIC.test(cleaned), topical: TOPICS.test(cleaned) }));
+        console.warn('Chat reply unavailable', JSON.stringify({ finish: data?.choices?.[0]?.finish_reason, tokens: Number(data?.usage?.completion_tokens) || 0, kind: typeof raw, length: cleaned.length, html: /<[^>]*>/.test(cleaned), links: /https?:\/\//i.test(cleaned), internalDetails: OUTPUT_META.test(cleaned), offTopic: OFF_TOPIC.test(cleaned), topical: TOPICS.test(cleaned) }));
         return fallback;
       }
       return { answer, mode: 'live', source: 'AI answer using project notes' };
