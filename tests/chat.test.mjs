@@ -304,3 +304,11 @@ test('the route supplies its visitor identity and the daily limit stops live cal
   assert.equal(result.body.reason, 'visitor-daily-limit');
   assert.equal((await callHandler({ body: { question, visitorId: 'forged' } })).statusCode, 400);
 });
+
+
+test('live answers are capped at five complete sentences', async () => {
+  const answer = 'Plastic pyrolysis uses heat. It works without oxygen. It breaks polymer chains. It produces hydrocarbons. Some vapours form oil. The last sentence must be omitted.';
+  const result = await processChat({ question: 'What is plastic pyrolysis?' }, { env: LIVE_ENV, fetchImpl: async () => jsonResponse(answer) });
+  assert.equal(result.mode, 'live');
+  assert.equal(result.answer, 'Plastic pyrolysis uses heat. It works without oxygen. It breaks polymer chains. It produces hydrocarbons. Some vapours form oil.');
+});

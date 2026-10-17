@@ -63,7 +63,8 @@ function safeAnswer(value) {
   const text = value.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
   if (!text || text.length > MAX_ANSWER_CHARS || /<[^>]*>|https?:\/\/|\b(?:sk-|llm7[_-])\S{8,}/i.test(text)) return null;
   if (OUTPUT_META.test(text) || OFF_TOPIC.test(text) || !TOPICS.test(text)) return null;
-  return text.replace(/[\u2013\u2014]/g, ',');
+  const sentences = new Intl.Segmenter('en-GB', { granularity: 'sentence' }).segment(text.replace(/[\u2013\u2014]/g, ','));
+  return [...sentences].slice(0, 5).map(({ segment }) => segment).join('').trim();
 }
 
 async function readProviderJson(response) {
