@@ -40,6 +40,8 @@ export async function reserveChatBudget(units, { env = process.env, fetchImpl = 
     const text = await response.text();
     if (text.length > 4096) return false;
     const data = JSON.parse(text);
+    if (data.result === 0) console.warn('Chat shared daily budget exhausted');
+    else if (data.error || data.result !== 1) console.warn('Chat budget store reply unavailable');
     return !data.error && data.result === 1;
-  } catch { return false; }
+  } catch { console.warn('Chat budget store unavailable'); return false; }
 }

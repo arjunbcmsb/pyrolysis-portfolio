@@ -103,7 +103,8 @@ export async function processChat(payload, { env = process.env, fetchImpl = glob
   const callProvider = async (url, init) => {
     const requestBytes = Buffer.byteLength(init.body, 'utf8');
     if (requestBytes > MAX_PROVIDER_INPUT_BYTES || !await reserveBudget(requestBytes + MAX_OUTPUT_TOKENS + 128, { env })) {
-      return new Response('', { status: 429 });
+      console.warn('Chat provider request skipped by local allowance protection');
+      return null;
     }
     return fetchImpl(url, init);
   };
@@ -131,6 +132,7 @@ export async function processChat(payload, { env = process.env, fetchImpl = glob
           ],
         }),
       });
+      if (!response) return fallback;
       if (!response.ok) {
         console.warn('Chat provider unavailable', response.status);
         return fallback;
