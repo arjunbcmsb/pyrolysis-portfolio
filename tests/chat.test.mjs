@@ -206,7 +206,7 @@ test('normal answers about visible and hidden reactor components are allowed', a
 
 
 test('suggested questions use live AI when available', async () => {
-  for (const question of ['What does plastic pyrolysis produce?', 'What did Arjun build?', 'Why is nitrogen used?']) {
+  for (const question of ['What does plastic pyrolysis produce?', 'What did Arjun build?', 'How will it help the environment?']) {
     let called = false;
     const result = await processChat({ question }, { env: LIVE_ENV, fetchImpl: async () => {
       called = true;
