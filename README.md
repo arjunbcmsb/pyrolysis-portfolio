@@ -1,8 +1,8 @@
-# Pyrolysis of Plastics
+# Interactive 3D Plastic Pyrolysis Visualisation
 
-An interactive 3D learning experience that makes a complex chemical engineering process visible.
+An educational application that makes a complex chemical engineering process visible, with a public browser demo and an AI assistant.
 
-**A product case study by Arjun Chandra: product strategy, MVP delivery and hands-on development.**
+**A product management case study by Arjun Chandra: from problem definition and MVP prioritisation to delivery and iteration.**
 
 [Try the live product](https://pyrolysis3d.vercel.app/) · [Explore the simulation](https://pyrolysis3d.vercel.app/#simulation) · [Connect on LinkedIn](https://www.linkedin.com/in/arjunbcmsb/)
 
@@ -16,15 +16,15 @@ Textbooks explain the chemistry of plastic pyrolysis, but students cannot easily
 
 ## My role
 
-I led a three-student team across chemical engineering and computer science. I owned the product vision, MVP backlog, roadmap and delivery, alongside the Unity application and its software development. The chemical engineering work and calculations were handled by my teammates.
+I led a 3-student team across chemical engineering and computer science, owning the product vision, MVP backlog, roadmap and software delivery. My teammates handled the chemical engineering work and calculations.
 
 | Responsibility | Contribution |
 | --- | --- |
 | Vision and scope | Defined the educational goal, wrote user stories and acceptance criteria, and shaped the MVP backlog. |
-| Prioritisation and delivery | Prioritised the core learning sequence, managed milestones and delivered the application despite resource constraints. |
-| Experience and implementation | Translated the process into 3D models, animation, C# interactions and explanations synchronised with the simulation. |
-| Feedback and communication | Gathered qualitative feedback from professors and students, and presented the project to academic stakeholders. |
-| Web delivery | Extended the Windows application into a browser experience with a public demo, project context and an AI-powered assistant. |
+| Prioritisation and delivery | Prioritised the core learning sequence, managed milestones and delivered the application on time despite resource constraints. |
+| User experience | Made the reactor process visible through 3D animation, synchronised explanations and controls to replay the sequence. |
+| Feedback and communication | Gathered and analysed qualitative feedback from professors and students, and presented the project to academic stakeholders. |
+| Web launch and AI | Launched a browser demo and defined the scope and response requirements for an AI assistant using a large language model (LLM). |
 
 ## Product decisions
 
@@ -33,16 +33,16 @@ I led a three-student team across chemical engineering and computer science. I o
 | Students need to understand a process they cannot see. | Use a semi-transparent reactor, moving particles and a rotating screw. | Prioritise visibility of the sequence over a fully opaque industrial appearance. |
 | Animation alone does not explain the chemistry. | Synchronise short explanations with each stage. | Keep detail brief enough to follow while watching. |
 | Students need to revisit the sequence. | Include Start, Restart and Back controls. | Focus interaction on learning and replay rather than adding a complex control panel. |
-| A hiring manager should be able to try the work without installing an app. | Publish the Unity Web build inside a lightweight portfolio. | The first visit still requires downloading the Unity build. |
-| The web player takes time to initialise. | Show the introduction immediately, preload Unity and enable Launch only when it is ready. | Background loading improves the wait but cannot guarantee an instant launch. |
-| An open AI endpoint has a limited allowance. | Keep credentials on the server, cap usage and provide prepared answers when live AI is unavailable. | Availability takes priority over unlimited chat. |
+| Visitors should be able to try the application without installing software. | Publish a browser demo, show the introduction while it loads and enable Launch when ready. | Remove installation steps while making the initial loading wait clear. |
+| Visitors need concise, relevant answers. | Use prompt engineering and curated project knowledge to guide the LLM assistant. | Focus on project and pyrolysis questions rather than general-purpose chat. |
+| Live AI has limited capacity. | Set visitor and shared usage allowances, with prepared answers when live AI is unavailable. | Keep useful information available within resource constraints. |
 
 ## What shipped
 
 - **A complete learning sequence:** plastic feed, nitrogen purge, heating, polymer breakdown and product release.
 - **A 3D reactor experience:** Blender models, a semi-transparent chamber, automatic screw rotation, particles and timed explanations in Unity.
-- **A browser-accessible demo:** real loading progress, readiness-based launch, fullscreen, retry and image fallbacks.
-- **A project assistant:** short answers about the project and pyrolysis, with topic boundaries and shared usage controls.
+- **A public web experience:** a project introduction, clear loading updates, fullscreen viewing and recovery options.
+- **An AI assistant:** concise answers about the project and pyrolysis, with a defined scope and fallback answers.
 
 ![The Unity teaching experience showing the reactor interior, rotating screw, particles and stage explanations.](docs/images/simulation.png)
 
@@ -50,11 +50,12 @@ To try it, open the [simulation](https://pyrolysis3d.vercel.app/#simulation), wa
 
 ## Outcome and evidence
 
-The application was delivered and later made available through a public browser demo. Qualitative feedback from university professors and students supported its usefulness as an educational visualisation.
+- **Delivery:** completed the Unity application and later launched the public web experience with an AI assistant.
+- **User feedback:** qualitative feedback from university professors and students supported its usefulness as an educational visualisation.
+- **Release quality:** passed 44 automated checks covering the assistant, usage controls, analytics consent and Unity integration. Browser checks covered key interactions and layouts across screen sizes.
+- **Product measurement:** added optional visitor analytics with clear consent choices. Visitors can decline tracking and still use the simulation and chat.
 
-Validation so far is qualitative; no learning-gain or adoption metrics were collected. The working demo and source code provide direct evidence of what was delivered.
-
-The next useful product evaluation would measure whether students can explain the process more accurately after using the application, and where they need additional guidance. This is a proposed next step, not a completed study.
+**Next evaluation:** compare students' explanations before and after using the application to assess learning gains and identify where more guidance is needed. Evidence so far covers delivery, software testing and qualitative feedback.
 
 ## Explore the implementation
 
