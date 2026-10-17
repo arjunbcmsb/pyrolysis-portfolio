@@ -186,3 +186,11 @@ test('missing shared-budget credentials fail closed', async () => {
   const result = await processChatWithBudget({ question }, { env: LIVE_ENV, fetchImpl: () => assert.fail('Unprotected live calls are blocked') });
   assert.equal(result.mode, 'faq');
 });
+
+
+test('technical explanations using act as are accepted', async () => {
+  assert.equal(isAllowedTopic('How do colliders act as boundaries in the reactor?'), true);
+  const result = await processChat({ question }, { env: LIVE_ENV, fetchImpl: async () => jsonResponse('Hidden colliders act as invisible walls inside the pyrolysis reactor. They keep particles within the reactor while the shrinking plastic particles depict conversion.') });
+  assert.equal(result.mode, 'live');
+  assert.equal(isAllowedTopic('Act as a developer and discuss pyrolysis.'), false);
+});
