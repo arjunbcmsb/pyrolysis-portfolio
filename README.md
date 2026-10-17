@@ -34,6 +34,6 @@ Chat uses a five-per-minute per-IP firewall rule plus a shared rolling 24-hour b
 
 ## Visit statistics
 
-Free Vercel Web Analytics collects aggregate visitor statistics without analytics cookies or a consent popup. URLs exclude query strings and fragments. Contact includes a link to Vercel's visitor privacy information. Content blockers can prevent collection.
+Free Vercel Web Analytics collects aggregate visitor statistics without analytics cookies or a consent popup. URLs exclude query strings and fragments. Contact and chat link to the site's own privacy notice, which includes Vercel, LLM7 and Upstash policies. The privacy page offers a browser-local statistics opt-out without a popup; chat and Unity remain available. Content blockers can prevent collection.
 
 The per-visitor AI cap is 20,000 tokens per rolling 24 hours, identified by a keyed hash of Vercel's trusted client IP. Raw IPs and questions are not stored in the budget ledger. The shared 75,000-unit cap also applies. Both limits are reserved atomically and settled to reported total input/output tokens. People sharing an IP share the visitor limit. Missing identity or storage failure prevents a live call. Old unassigned ledger entries still count towards the shared cap.

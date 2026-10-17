@@ -1,17 +1,6 @@
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
-  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
-  window.va('beforeSend', (event) => {
-    const cleanUrl = new URL(event.url, location.origin);
-    cleanUrl.search = '';
-    cleanUrl.hash = '';
-    return { ...event, url: cleanUrl.href };
-  });
-  const analyticsScript = document.createElement('script');
-  analyticsScript.src = '/_vercel/insights/script.js';
-  analyticsScript.defer = true;
-  document.head.append(analyticsScript);
   const stage = $('player-stage');
   const cover = $('player-cover');
   const launch = $('launch-button');
