@@ -160,6 +160,7 @@
   const log = $('chat-log');
   const chatStatus = $('chat-status');
   const send = $('chat-send');
+  const thinking = $('chat-thinking');
   let busy = false;
   let opener;
   const history = [];
@@ -204,10 +205,12 @@
     addMessage(question, 'user');
     input.value = '';
     $('question-count').textContent = '0 / 600';
-    chatStatus.textContent = 'Finding a short answer...';
+    thinking.hidden = false;
+    log.setAttribute('aria-busy', 'true');
+    chatStatus.textContent = '';
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 40_000);
-    let answer, source, mode;
+    let answer, source, mode, reason;
     try {
       const response = await fetch('/api/chat', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -216,17 +219,19 @@
       if (!response.ok) throw new Error('Unavailable');
       const data = await response.json();
       if (typeof data.answer !== 'string' || data.answer.length > 1500 || !['live', 'faq', 'refused'].includes(data.mode)) throw new Error('Invalid answer');
-      answer = data.answer; mode = data.mode;
+      answer = data.answer; mode = data.mode; reason = data.reason;
       source = mode === 'live' ? 'AI answer · Project notes' : mode === 'faq' ? (data.source === 'Prepared project answer' ? 'Prepared project answer' : 'Prepared FAQ · Live AI unavailable') : 'Project topic guide';
     } catch {
       answer = offlineAnswer(question); source = 'Prepared FAQ · Live AI unavailable'; mode = 'faq';
     } finally { clearTimeout(timeout); }
+    thinking.hidden = true;
+    log.setAttribute('aria-busy', 'false');
     addMessage(answer, 'assistant', source);
     if (mode !== 'refused') {
       history.push({ role: 'user', content: question }, { role: 'assistant', content: answer.slice(0, 1100) });
       if (history.length > 6) history.splice(0, history.length - 6);
     }
-    chatStatus.textContent = mode === 'faq' ? 'Showing a prepared project FAQ.' : '';
+    chatStatus.textContent = reason === 'visitor-daily-limit' ? 'Daily AI limit reached. Showing a prepared answer.' : mode === 'faq' ? 'Showing a prepared project FAQ.' : '';
     busy = false; send.disabled = false;
     document.querySelectorAll('[data-question], [data-quick-question]').forEach((button) => { button.disabled = false; });
     if (dialog.open) input.focus();
