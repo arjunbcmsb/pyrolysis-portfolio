@@ -1,0 +1,58 @@
+:root {
+  color-scheme: dark;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #101c1a;
+  color: #f4f0e7;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  display: grid;
+  place-items: center;
+}
+
+#unity-container {
+  position: relative;
+  width: min(100vw, 160vh);
+  aspect-ratio: 8 / 5;
+  background: #101c1a;
+}
+
+#unity-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #101c1a;
+  touch-action: none;
+}
+
+#unity-canvas:focus-visible {
+  outline: 3px solid #e4f1a6;
+  outline-offset: -3px;
+}
+
+#unity-status {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  padding: 24px;
+  background: #101c1a;
+  text-align: center;
+}
+
+#unity-status[hidden], #unity-progress[hidden] { display: none; }
+#unity-status-text { max-width: 36ch; margin: 0; line-height: 1.6; }
+#unity-progress { width: min(240px, 75%); height: 8px; accent-color: #e4f1a6; }
+noscript { position: absolute; inset: 30%; text-align: center; }

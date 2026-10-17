@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#101c1a">
+    <title>Pyrolysis of Plastics | Interactive demo</title>
+    <link rel="icon" href="TemplateData/favicon.ico">
+    <link rel="stylesheet" href="player.css">
+    <script src="player.js" defer></script>
+  </head>
+  <body>
+    <main id="unity-container" data-state="loading" aria-label="Interactive pyrolysis demonstration">
+      <canvas id="unity-canvas" width="960" height="600" tabindex="0" title="Pyrolysis of Plastics interactive demo" aria-label="Pyrolysis of Plastics interactive demo. Use the buttons inside the demo to start, restart or go back.">
+        Your browser needs WebGL to display this interactive demo.
+      </canvas>
+      <div id="unity-status" role="status" aria-live="polite">
+        <p id="unity-status-text">Preparing the interactive demo…</p>
+        <progress id="unity-progress" max="1" value="0" aria-label="Demo loading progress"></progress>
+      </div>
+      <noscript>This interactive demo needs JavaScript to run.</noscript>
+    </main>
+  </body>
+</html>

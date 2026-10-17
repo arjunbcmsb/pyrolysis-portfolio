@@ -1,0 +1,10 @@
+.env*
+.vercel
+node_modules
+tests
+scripts
+*.md
+*.zip
+*.pdf
+*.log
+verification
