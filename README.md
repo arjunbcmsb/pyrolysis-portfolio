@@ -32,6 +32,6 @@ Original Unity source files and the project report are excluded from this reposi
 
 Chat uses a five-per-minute per-IP firewall rule plus a shared rolling 24-hour budget in free Upstash Redis. Common suggested questions use approved answers without an AI request. Store failures and exhausted budgets use FAQs. Paid auto-upgrades are disabled.
 
-## Optional visit statistics
+## Visit statistics
 
-Free Vercel Web Analytics loads only after Accept. Decline prevents collection; Privacy preferences in Contact lets visitors change their choice. The choice stays in local storage, with no analytics cookies. URLs exclude query strings and fragments. Withdrawing consent blocks future analytics events. Only consenting visits appear in the dashboard.
+Free Vercel Web Analytics collects aggregate visitor statistics without analytics cookies or a consent popup. URLs exclude query strings and fragments. Contact includes a link to Vercel's visitor privacy information. Content blockers can prevent collection.
