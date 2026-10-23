@@ -39,7 +39,7 @@ The test suite has 44 automated checks across chat, shared budgets, analytics co
 
 ## Assistant configuration
 
-The live assistant calls LLM7's `GLM-5.3-Flash` through a server endpoint. Credentials stay in private Vercel environment variables. `.env.example` contains names and empty values only.
+The live assistant calls LLM7's `default` model selector through a server endpoint, so LLM7 can choose its currently available general-purpose model. Credentials stay in private Vercel environment variables. `.env.example` contains names and empty values only.
 
 | Variable | Purpose |
 | --- | --- |
@@ -60,7 +60,7 @@ Live responses depend on provider availability, account limits and the shared bu
 | Control | Current setting |
 | --- | --- |
 | Vercel firewall | Five `POST /api/chat` requests per minute per IP. Configure on the hosting project; this rule is not created by cloning the repo. |
-| Visitor allowance | 20,000 tokens per rolling 24 hours. |
+| Visitor allowance | 50,000 tokens per rolling 24 hours. |
 | Shared allowance | 75,000 units per rolling 24 hours, reserved before calls and settled to reported total token usage. |
 | Question size | 600 characters; request body limited to 8 KB. |
 | Provider input/output | 16 KB input limit; 512 output tokens. |

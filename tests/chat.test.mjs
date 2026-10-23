@@ -69,7 +69,7 @@ test('PM questions use confirmed contribution without invented evidence or other
   assert.doesNotMatch(contribution.answer, /teammate|other team/);
 });
 
-test('pins the model and sends bounded chat only to the approved endpoint', async () => {
+test('uses LLM7 default model selection and sends bounded chat only to the approved endpoint', async () => {
   let request;
   const result = await processChat({ question, history: [{ role: 'user', content: 'What is this project?' }] }, {
     env: LIVE_ENV,
@@ -79,8 +79,9 @@ test('pins the model and sends bounded chat only to the approved endpoint', asyn
     },
   });
   assert.equal(result.mode, 'live');
+  assert.equal(MODEL, 'default');
   assert.equal(request.url, 'https://api.llm7.io/v1/chat/completions');
-  assert.equal(request.body.model, MODEL);
+  assert.equal(request.body.model, 'default');
   assert.equal(request.body.max_tokens, 512);
   assert.equal(request.body.stream, false);
   assert.equal(request.body.tools, undefined);

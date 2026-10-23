@@ -7,7 +7,7 @@ export const MAX_BODY_BYTES = 8192;
 export const MAX_ANSWER_CHARS = 1100;
 export const MAX_OUTPUT_TOKENS = 512;
 export const MAX_PROVIDER_INPUT_BYTES = 16_000;
-export const MODEL = 'GLM-5.3-Flash';
+export const MODEL = 'default';
 const API_URL = 'https://api.llm7.io/v1/chat/completions';
 const TIMEOUT_MS = 30_000;
 

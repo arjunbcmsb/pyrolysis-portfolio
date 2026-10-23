@@ -61,7 +61,7 @@ test('visitor quota denial and missing identity cannot permit a model request', 
   for (const visitorId of [undefined, '', '192.0.2.10', 'x'.repeat(64)]) {
     assert.equal(await reserveChatBudget(6000, { env, visitorId, fetchImpl: () => assert.fail('Identity must be server verified') }), false);
   }
-  assert.equal(VISITOR_DAILY_BUDGET_UNITS, 20000);
+  assert.equal(VISITOR_DAILY_BUDGET_UNITS, 50000);
   assert.match(BUDGET_SCRIPT, /visitorUsed \+ cost > tonumber\(ARGV\[6\]\)/);
   assert.match(BUDGET_SCRIPT, /if used \+ cost > ceiling then return 0 end/);
 });

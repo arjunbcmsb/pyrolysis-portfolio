@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 // Reserve conservatively, then settle to provider-reported total token usage.
 // One shared rolling ledger covers all IPs, instances and deployment URLs.
 export const DAILY_BUDGET_UNITS = 75_000;
-export const VISITOR_DAILY_BUDGET_UNITS = 20_000;
+export const VISITOR_DAILY_BUDGET_UNITS = 50_000;
 export const WINDOW_MS = 86_400_000;
 export const BUDGET_SCRIPT = `
 local clock = redis.call('TIME')
